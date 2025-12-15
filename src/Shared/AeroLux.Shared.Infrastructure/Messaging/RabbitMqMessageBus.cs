@@ -10,28 +10,68 @@ namespace AeroLux.Shared.Infrastructure.Messaging;
 /// </summary>
 public class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
 {
-    private readonly IConnection? _connection;
-    private readonly IChannel? _channel;
+    private IConnection? _connection;
+    private IChannel? _channel;
     private readonly string _exchangeName;
+    private readonly string _connectionString;
+    private readonly SemaphoreSlim _initLock = new(1, 1);
+    private bool _initialized;
 
-    public RabbitMqMessageBus(string connectionString, string exchangeName = "aerolux.events")
+    private RabbitMqMessageBus(string connectionString, string exchangeName)
     {
+        _connectionString = connectionString;
         _exchangeName = exchangeName;
+    }
 
-        var factory = new ConnectionFactory
-        {
-            Uri = new Uri(connectionString)
-        };
+    /// <summary>
+    /// Creates a new instance of RabbitMqMessageBus
+    /// </summary>
+    public static async Task<RabbitMqMessageBus> CreateAsync(
+        string connectionString, 
+        string exchangeName = "aerolux.events",
+        CancellationToken cancellationToken = default)
+    {
+        var bus = new RabbitMqMessageBus(connectionString, exchangeName);
+        await bus.InitializeAsync(cancellationToken);
+        return bus;
+    }
 
+    /// <summary>
+    /// Creates an uninitialized instance that will connect lazily on first use
+    /// </summary>
+    public static RabbitMqMessageBus CreateLazy(string connectionString, string exchangeName = "aerolux.events")
+    {
+        return new RabbitMqMessageBus(connectionString, exchangeName);
+    }
+
+    private async Task InitializeAsync(CancellationToken cancellationToken = default)
+    {
+        if (_initialized)
+            return;
+
+        await _initLock.WaitAsync(cancellationToken);
         try
         {
-            _connection = factory.CreateConnectionAsync().GetAwaiter().GetResult();
-            _channel = _connection.CreateChannelAsync().GetAwaiter().GetResult();
-            _channel.ExchangeDeclareAsync(_exchangeName, ExchangeType.Topic, durable: true).GetAwaiter().GetResult();
+            if (_initialized)
+                return;
+
+            var factory = new ConnectionFactory
+            {
+                Uri = new Uri(_connectionString)
+            };
+
+            _connection = await factory.CreateConnectionAsync(cancellationToken);
+            _channel = await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
+            await _channel.ExchangeDeclareAsync(_exchangeName, ExchangeType.Topic, durable: true, cancellationToken: cancellationToken);
+            _initialized = true;
         }
         catch
         {
             // Connection may fail if RabbitMQ is not available - service should still start
+        }
+        finally
+        {
+            _initLock.Release();
         }
     }
 
@@ -43,6 +83,9 @@ public class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
 
     public async Task PublishAsync(IIntegrationEvent integrationEvent, CancellationToken cancellationToken = default)
     {
+        if (!_initialized)
+            await InitializeAsync(cancellationToken);
+
         if (_channel is null)
             return;
 
@@ -74,5 +117,7 @@ public class RabbitMqMessageBus : IMessageBus, IAsyncDisposable
 
         if (_connection is not null)
             await _connection.CloseAsync();
+
+        _initLock.Dispose();
     }
 }

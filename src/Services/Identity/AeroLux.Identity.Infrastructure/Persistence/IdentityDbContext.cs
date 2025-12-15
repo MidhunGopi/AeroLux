@@ -1,6 +1,8 @@
 using AeroLux.Identity.Domain.Entities;
 using AeroLux.Identity.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using System.Text.Json;
 
 namespace AeroLux.Identity.Infrastructure.Persistence;
 
@@ -55,10 +57,17 @@ public class IdentityDbContext : DbContext
 
             entity.Property(u => u.RefreshTokenExpiryTime);
 
-            // Store roles as JSON array
-            entity.Property<List<string>>("_roles")
+            // Store roles as JSON array using explicit property access
+            entity.Property(u => u.Roles)
                 .HasColumnName("Roles")
-                .HasColumnType("jsonb");
+                .HasColumnType("jsonb")
+                .HasConversion(
+                    roles => JsonSerializer.Serialize(roles, (JsonSerializerOptions?)null),
+                    json => JsonSerializer.Deserialize<List<string>>(json, (JsonSerializerOptions?)null) ?? new List<string>(),
+                    new ValueComparer<IReadOnlyList<string>>(
+                        (c1, c2) => c1 != null && c2 != null && c1.SequenceEqual(c2),
+                        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                        c => c.ToList()));
         });
     }
 }

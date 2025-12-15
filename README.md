@@ -204,9 +204,19 @@ The platform demonstrates enterprise testing strategies:
 - **Integration Tests**: End-to-end API tests
 - **Event Processing**: Event handler verification
 
+## 🐳 Docker Support
+
+The platform includes Docker support for easy deployment:
+
+```bash
+# Build and run with Docker Compose
+docker-compose up --build
+
+# The API will be available at http://localhost:8080
+```
+
 ## 🌟 Future Enhancements
 
-- Docker containerization
 - Message broker integration (RabbitMQ/Kafka)
 - SQL Server/PostgreSQL persistence
 - Authentication & Authorization

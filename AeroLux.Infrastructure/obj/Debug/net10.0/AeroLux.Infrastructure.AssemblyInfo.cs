@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AeroLux.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b35e586fc3c1c5d3c8f66712bf4e62c0430f9b45")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+86fa13c654a0336cbe2c569b13dcaf985a0b89cf")]
 [assembly: System.Reflection.AssemblyProductAttribute("AeroLux.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AeroLux.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

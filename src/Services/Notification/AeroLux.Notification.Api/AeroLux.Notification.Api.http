@@ -1,0 +1,6 @@
+@AeroLux.Notification.Api_HostAddress = http://localhost:5250
+
+GET {{AeroLux.Notification.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,6 @@
+@AeroLux.FlightControl.Api_HostAddress = http://localhost:5240
+
+GET {{AeroLux.FlightControl.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

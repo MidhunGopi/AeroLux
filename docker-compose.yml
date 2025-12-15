@@ -1,0 +1,284 @@
+version: '3.8'
+
+services:
+  # Infrastructure Services
+  postgres:
+    image: postgres:16-alpine
+    container_name: aerolux-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-databases.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: aerolux-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: aerolux-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  opensearch:
+    image: opensearchproject/opensearch:2.11.0
+    container_name: aerolux-opensearch
+    environment:
+      - discovery.type=single-node
+      - plugins.security.disabled=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # API Gateway
+  gateway:
+    build:
+      context: .
+      dockerfile: src/Gateway/AeroLux.Gateway/Dockerfile
+    container_name: aerolux-gateway
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Jwt__SecretKey=AeroLuxSuperSecretKey123456789012345678901234567890
+    depends_on:
+      - identity-api
+      - booking-api
+      - fleet-api
+      - crew-api
+      - flight-operations-api
+      - flight-control-api
+      - tracking-api
+      - billing-api
+      - notification-api
+      - audit-api
+
+  # Microservices
+  identity-api:
+    build:
+      context: .
+      dockerfile: src/Services/Identity/AeroLux.Identity.Api/Dockerfile
+    container_name: aerolux-identity
+    ports:
+      - "5101:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=aerolux_identity;Username=postgres;Password=postgres
+      - RabbitMQ__HostName=rabbitmq
+      - Jwt__SecretKey=AeroLuxSuperSecretKey123456789012345678901234567890
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  booking-api:
+    build:
+      context: .
+      dockerfile: src/Services/Booking/AeroLux.Booking.Api/Dockerfile
+    container_name: aerolux-booking
+    ports:
+      - "5102:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=aerolux_booking;Username=postgres;Password=postgres
+      - RabbitMQ__HostName=rabbitmq
+      - Jwt__SecretKey=AeroLuxSuperSecretKey123456789012345678901234567890
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  fleet-api:
+    build:
+      context: .
+      dockerfile: src/Services/Fleet/AeroLux.Fleet.Api/Dockerfile
+    container_name: aerolux-fleet
+    ports:
+      - "5103:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=aerolux_fleet;Username=postgres;Password=postgres
+      - RabbitMQ__HostName=rabbitmq
+      - Jwt__SecretKey=AeroLuxSuperSecretKey123456789012345678901234567890
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  crew-api:
+    build:
+      context: .
+      dockerfile: src/Services/Crew/AeroLux.Crew.Api/Dockerfile
+    container_name: aerolux-crew
+    ports:
+      - "5104:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=aerolux_crew;Username=postgres;Password=postgres
+      - RabbitMQ__HostName=rabbitmq
+      - Jwt__SecretKey=AeroLuxSuperSecretKey123456789012345678901234567890
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  flight-operations-api:
+    build:
+      context: .
+      dockerfile: src/Services/FlightOperations/AeroLux.FlightOperations.Api/Dockerfile
+    container_name: aerolux-flight-operations
+    ports:
+      - "5105:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=aerolux_flight_operations;Username=postgres;Password=postgres
+      - RabbitMQ__HostName=rabbitmq
+      - Jwt__SecretKey=AeroLuxSuperSecretKey123456789012345678901234567890
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  flight-control-api:
+    build:
+      context: .
+      dockerfile: src/Services/FlightControl/AeroLux.FlightControl.Api/Dockerfile
+    container_name: aerolux-flight-control
+    ports:
+      - "5106:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=aerolux_flight_control;Username=postgres;Password=postgres
+      - RabbitMQ__HostName=rabbitmq
+      - Jwt__SecretKey=AeroLuxSuperSecretKey123456789012345678901234567890
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  tracking-api:
+    build:
+      context: .
+      dockerfile: src/Services/Tracking/AeroLux.Tracking.Api/Dockerfile
+    container_name: aerolux-tracking
+    ports:
+      - "5107:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=aerolux_tracking;Username=postgres;Password=postgres
+      - RabbitMQ__HostName=rabbitmq
+      - Redis__Configuration=redis:6379
+      - Jwt__SecretKey=AeroLuxSuperSecretKey123456789012345678901234567890
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  billing-api:
+    build:
+      context: .
+      dockerfile: src/Services/Billing/AeroLux.Billing.Api/Dockerfile
+    container_name: aerolux-billing
+    ports:
+      - "5108:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=aerolux_billing;Username=postgres;Password=postgres
+      - RabbitMQ__HostName=rabbitmq
+      - Jwt__SecretKey=AeroLuxSuperSecretKey123456789012345678901234567890
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  notification-api:
+    build:
+      context: .
+      dockerfile: src/Services/Notification/AeroLux.Notification.Api/Dockerfile
+    container_name: aerolux-notification
+    ports:
+      - "5109:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=aerolux_notification;Username=postgres;Password=postgres
+      - RabbitMQ__HostName=rabbitmq
+      - Jwt__SecretKey=AeroLuxSuperSecretKey123456789012345678901234567890
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  audit-api:
+    build:
+      context: .
+      dockerfile: src/Services/Audit/AeroLux.Audit.Api/Dockerfile
+    container_name: aerolux-audit
+    ports:
+      - "5110:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=aerolux_audit;Username=postgres;Password=postgres
+      - RabbitMQ__HostName=rabbitmq
+      - OpenSearch__Url=http://opensearch:9200
+      - Jwt__SecretKey=AeroLuxSuperSecretKey123456789012345678901234567890
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
+  redis_data:
+  opensearch_data:

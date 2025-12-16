@@ -9,19 +9,23 @@ This document provides step-by-step instructions for setting up and running Enti
    dotnet --version
    ```
 
-2. **EF Core CLI Tools** - Install globally if not already installed
-   ```powershell
-   dotnet tool install --global dotnet-ef
-   ```
-   
-   Or update to the latest version:
-   ```powershell
-   dotnet tool update --global dotnet-ef
-   ```
-
-3. **SQL Server LocalDB** - Ensure SQL Server LocalDB is installed (comes with Visual Studio)
+2. **SQL Server LocalDB** - Ensure SQL Server LocalDB is installed (comes with Visual Studio)
    - Instance name: `(localdb)\MSSQLLocalDB`
    - Uses Windows Authentication
+
+## Quick Start (Easiest Method)
+
+### Running Migrations from Visual Studio
+
+1. **Set AeroLux.Migrations as Startup Project**
+   - Right-click on `AeroLux.Migrations` in Solution Explorer
+   - Select **"Set as Startup Project"**
+
+2. **Run the Project**
+   - Press **F5** or click the green **Start** button
+   - The console will display migration progress and status
+
+That's it! The database and all tables will be created automatically.
 
 ## Project Structure
 
@@ -30,7 +34,7 @@ AeroLux/
 ??? AeroLux.Domain/           # Domain entities
 ??? AeroLux.Application/      # Application layer
 ??? AeroLux.Infrastructure/   # DbContext and repositories
-??? AeroLux.Migrations/       # Migration project (you are here)
+??? AeroLux.Migrations/       # Migration project (run this to apply migrations)
 ??? AeroLux.API/              # Web API
 ```
 
@@ -56,7 +60,9 @@ The connection string is configured in `AeroLux.Migrations/appsettings.json`:
 | SQL Server with credentials | `Server=your-server;Database=AeroLuxDb;User Id=your-user;Password=your-password;TrustServerCertificate=True` |
 | Azure SQL | `Server=your-server.database.windows.net;Database=AeroLuxDb;User Id=your-user;Password=your-password;Encrypt=True` |
 
-## Step-by-Step Guide
+## Alternative: Command Line Setup
+
+If you prefer using the command line:
 
 ### Step 1: Clone the Repository
 
@@ -65,45 +71,24 @@ git clone https://github.com/MidhunGopi/AeroLux.git
 cd AeroLux
 ```
 
-### Step 2: Restore NuGet Packages
+### Step 2: Install EF Core CLI Tools (if not installed)
+
+```powershell
+dotnet tool install --global dotnet-ef
+```
+
+### Step 3: Restore and Build
 
 ```powershell
 dotnet restore
-```
-
-### Step 3: Build the Solution
-
-```powershell
 dotnet build
 ```
 
-### Step 4: Update Connection String (if needed)
-
-Edit `AeroLux.Migrations/appsettings.json` to match your SQL Server configuration.
-
-### Step 5: Apply Migrations
-
-**Option A: Using the Migration Runner (Recommended)**
-
-Navigate to the migrations project and run it:
+### Step 4: Apply Migrations
 
 ```powershell
 cd AeroLux.Migrations
 dotnet run
-```
-
-This will:
-- Connect to the database
-- Check for pending migrations
-- Apply all pending migrations
-- Display the status of applied migrations
-
-**Option B: Using EF Core CLI**
-
-From the solution root directory:
-
-```powershell
-dotnet ef database update --project AeroLux.Migrations --startup-project AeroLux.Migrations --context AeroLuxDbContext
 ```
 
 ## Creating New Migrations
@@ -127,20 +112,16 @@ Example:
 dotnet ef migrations add AddPaymentTable --project AeroLux.Migrations --startup-project AeroLux.Migrations --context AeroLuxDbContext
 ```
 
-### Step 3: Review the Migration
+### Step 3: Apply the Migration
 
-Check the generated migration file in `AeroLux.Migrations/Migrations/` folder.
+**Option A: Run from Visual Studio**
+- Set `AeroLux.Migrations` as Startup Project
+- Press F5
 
-### Step 4: Apply the Migration
-
+**Option B: Run from command line**
 ```powershell
 cd AeroLux.Migrations
 dotnet run
-```
-
-Or using EF Core CLI:
-```powershell
-dotnet ef database update --project AeroLux.Migrations --startup-project AeroLux.Migrations --context AeroLuxDbContext
 ```
 
 ## Removing a Migration
@@ -246,12 +227,12 @@ Remove-Migration -Context AeroLuxDbContext
 
 ## Quick Reference Commands
 
-| Action | Command |
-|--------|---------|
-| Apply all migrations | `cd AeroLux.Migrations && dotnet run` |
+| Action | Method |
+|--------|--------|
+| Apply all migrations (easiest) | Set `AeroLux.Migrations` as Startup Project ? Press F5 |
+| Apply migrations (CLI) | `cd AeroLux.Migrations && dotnet run` |
 | Add new migration | `dotnet ef migrations add <Name> --project AeroLux.Migrations --startup-project AeroLux.Migrations --context AeroLuxDbContext` |
-| Update database (CLI) | `dotnet ef database update --project AeroLux.Migrations --startup-project AeroLux.Migrations --context AeroLuxDbContext` |
-| Remove last migration | `dotnet ef migrations remove --project AeroLux.Migrations --startup-project AeroLux.Migrations --context AeroLuxDbContext` |
+| Remove last migration | `dotnet ef migrations remove --project AeroLux.Migrations --startup-project AeroLux\Migrations --context AeroLuxDbContext` |
 | List migrations | `dotnet ef migrations list --project AeroLux.Migrations --startup-project AeroLux.Migrations --context AeroLuxDbContext` |
 
 ## Support

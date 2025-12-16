@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AeroLux.Infrastructure", "A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AeroLux.API", "AeroLux.API\AeroLux.API.csproj", "{5A2FA6C8-5931-426F-BDBF-F3746F1D0A0F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AeroLux.Migrations", "AeroLux.Migrations\AeroLux.Migrations.csproj", "{BD14E8A1-9965-473C-B725-F73E99E56FC8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,18 @@ Global
 		{5A2FA6C8-5931-426F-BDBF-F3746F1D0A0F}.Release|x64.Build.0 = Release|Any CPU
 		{5A2FA6C8-5931-426F-BDBF-F3746F1D0A0F}.Release|x86.ActiveCfg = Release|Any CPU
 		{5A2FA6C8-5931-426F-BDBF-F3746F1D0A0F}.Release|x86.Build.0 = Release|Any CPU
+		{BD14E8A1-9965-473C-B725-F73E99E56FC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD14E8A1-9965-473C-B725-F73E99E56FC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD14E8A1-9965-473C-B725-F73E99E56FC8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BD14E8A1-9965-473C-B725-F73E99E56FC8}.Debug|x64.Build.0 = Debug|Any CPU
+		{BD14E8A1-9965-473C-B725-F73E99E56FC8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BD14E8A1-9965-473C-B725-F73E99E56FC8}.Debug|x86.Build.0 = Debug|Any CPU
+		{BD14E8A1-9965-473C-B725-F73E99E56FC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD14E8A1-9965-473C-B725-F73E99E56FC8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD14E8A1-9965-473C-B725-F73E99E56FC8}.Release|x64.ActiveCfg = Release|Any CPU
+		{BD14E8A1-9965-473C-B725-F73E99E56FC8}.Release|x64.Build.0 = Release|Any CPU
+		{BD14E8A1-9965-473C-B725-F73E99E56FC8}.Release|x86.ActiveCfg = Release|Any CPU
+		{BD14E8A1-9965-473C-B725-F73E99E56FC8}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
